@@ -3,11 +3,14 @@
 (ql:quickload "uiop")
 
 
-(let ((nums (uiop:read-file-lines "input.txt")))
+(let ((lines (uiop:read-file-lines "input.txt")))
+  (defun parseInts(strings)
+    (loop for x in strings collect (read-from-string x)))
   (defun makeSum()
-    (loop for x in nums do
-      (loop for y in nums do
-        (let ((px (read-from-string x))
-              (py (read-from-string y)))
-          (when (= (+ px py) 2020) (return-from makeSum (* px py)))))))
-    (print (makeSum)))
+    (let ((nums (parseInts lines)))
+      (loop for x in nums do
+        (loop for y in nums do
+          (when (= (+ x y) 2020) (return-from makeSum (* x y)))))
+      )
+    )
+  (print (makeSum)))
