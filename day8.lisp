@@ -21,7 +21,7 @@
           (and (= n _n) (string= c _c)))))
     (defun is-jump(a)
       (cl-ppcre:all-matches-as-strings "jmp" a))
-    (defun do-loop(instructions)
+    (defun _run-program(instructions)
       (let ((line-number 0) (lines-run (list (list 0 "START"))) (running T))
         (setq accumulator 0)
         (loop while running do
@@ -38,14 +38,14 @@
             (if (>= line-number (length instructions)) (setq running Nil))))
         (list lines-run accumulator)))
 
-    (destructuring-bind (lines-run acc) (do-loop original-instructions)
+    (destructuring-bind (lines-run acc) (_run-program original-instructions)
       (print (list "part one:" acc))
       (loop for (n i) in lines-run
             when (is-jump i) ; part two
               do
                  (let ((instructions (copy-list original-instructions)))
                    (setf (nth n instructions) "nop +0")
-                   (destructuring-bind (lines-run acc) (do-loop instructions)
+                   (destructuring-bind (lines-run acc) (_run-program instructions)
                      (destructuring-bind (n op) (nth (- (length lines-run) 1) lines-run)
                        (if (not (string= op "kill +0"))
                            (print (list "part two: " acc))))))))))
