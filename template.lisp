@@ -10,10 +10,22 @@
   (ql:quickload 'cl-ppcre)
   (ql:quickload 'split-sequence))
 
-(defun partOne()
-  (let* ((lines (uiop:read-file-string "input.txt"))) lines))
+(defun my-parser(input)
+  (let* ((split-regex " ")
+        (replace-regex "")
+        (replaced (cl-ppcre:regex-replace-all replace-regex input "")))
+    (cl-ppcre:split split-regex replaced)))
 
-(defun partTwo()
-  (let* ((lines (uiop:read-file-string "input.txt"))) lines))
+(defun parse-file(name)
+  (let ((file-lines (uiop:read-file-lines name)))
+    (loop for line in file-lines
+          collect (my-parser line))))
 
-(print (list (partOne) (partTwo)))
+(defun partOne(parsed)
+  (print parsed))
+
+(defun partTwo(parsed)
+  (print parsed))
+
+(let ((parsed (parse-file "input.txt")))
+  (partOne parsed))
