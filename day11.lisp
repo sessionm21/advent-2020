@@ -35,171 +35,86 @@
                             when (char= c #\#)
                               collect c)))))
 
-
-(defun partOne(parsed)
-  (defun shuffle-seats(2dls row col)
-    (defun get-n-surround(2dls row col ttl)
-      (let ((n-cols (length (nth 0 2dls)))
-            (n-rows (length 2dls)))
-        (if (and (< row n-rows) (< col n-cols)
-                 (>= row 0) (>= col 0)
-                 (char= (nth col (nth row 2dls)) #\#))
-            (progn
-              (if (> ttl 0)
-                  ;; (print (list row col))
-                  (let ((_t (get-n-surround 2dls (- row 1) col 0))
-                        (b (get-n-surround 2dls (+ row 1) col 0))
-                        (l (get-n-surround 2dls row (- col 1) 0))
-                        (r (get-n-surround 2dls row (+ col 1) 0))
-                        (tl (get-n-surround 2dls (- row 1) (- col 1) 0))
-                        (tr (get-n-surround 2dls (- row 1) (+ col 1) 0))
-                        (bl (get-n-surround 2dls (+ row 1) (- col 1) 0))
-                        (br (get-n-surround 2dls (+ row 1) (+ col 1) 0))
-                        (c (if (char= (nth col (nth row 2dls)) #\#) (list col row))))
-                    (remove nil (list c _t b l r tl tr bl br)))
-                  (if (char= (nth col (nth row 2dls)) #\#) (list row col)))))))
-    (defun get-n-surround-empty(2dls row col ttl)
-      (let ((n-cols (length (nth 0 2dls)))
-            (n-rows (length 2dls)))
-        (if (and (< row n-rows) (< col n-cols)
-                 (>= row 0) (>= col 0)
-                 (char= (nth col (nth row 2dls)) #\L))
-            (progn
-              (if (> ttl 0)
-                  ;; (print (list row col))
-                  (let ((_t (get-n-surround 2dls (- row 1) col 0))
-                        (b (get-n-surround 2dls (+ row 1) col 0))
-                        (l (get-n-surround 2dls row (- col 1) 0))
-                        (r (get-n-surround 2dls row (+ col 1) 0))
-                        (tl (get-n-surround 2dls (- row 1) (- col 1) 0))
-                        (tr (get-n-surround 2dls (- row 1) (+ col 1) 0))
-                        (bl (get-n-surround 2dls (+ row 1) (- col 1) 0))
-                        (br (get-n-surround 2dls (+ row 1) (+ col 1) 0))
-                        (c (if (char= (nth col (nth row 2dls)) #\L) (list col row))))
-                    (remove nil (list c _t b l r tl tr bl br)))
-                  (if (char= (nth col (nth row 2dls)) #\L) (list row col)))))))
-
-    (loop while T do
-      (let* ((n-cols (- (length (nth 0 2dls)) 1))
-             (n-rows (- (length 2dls) 1))
-             (to-remove (remove nil
-                                (loop for i from 0 to n-rows
-                                      collect
-                                      (remove nil (loop for j from 0 to n-cols
-                                                        collect
-                                                        (remove nil (if (> (length (get-n-surround 2dls i j 1)) 4) (list i j)))))))))
-        (loop for col in to-remove do
-          (loop for row in to-remove do
-            (loop for (r c) in row do
-              (setf (nth c (nth r 2dls)) #\L ))))
-        ;; (print (get-n-surround 2dls 0 0 1))
-        ;; (print 2dls)
-        ;; (print (count-seats 2dls))
-        (let ((to-add
-                (remove nil (loop for i from 0 to n-rows
-                                  collect
-                                  (remove nil (loop for j from 0 to n-cols
-                                                    if (char= (nth j (nth i 2dls)) #\L)
-                                                      collect
-                                                      (if (<= (length (get-n-surround-empty 2dls i j 1)) 1) (list i j))
-                                                    ))))))
-
-          ;; (print to-add)
-          (loop for col in to-add do
-            (loop for row in to-add do
-              (loop for (r c) in row do
-                (setf (nth c (nth r 2dls)) #\# ))))
-          ;; (print 2dls)
-          (print (count-seats 2dls))
-          )
-        )))
-                                        ; (setf (nth c (nth r 2dls)) #\L ))))
-  (print (shuffle-seats parsed 0 0))
-  (count-seats parsed))
-
-(defparameter my-hash (make-hash-table))
-
-(defun partTwo(parsed)
-  (defun ping-direction (2dls cquery row col irow icol distance)
-    ;; (print (list "trace" row col))
-     (let ((n-cols (length (nth 0 2dls)))
-           (n-rows (length 2dls)))
-       (if (and (< row n-rows) (< col n-cols)
-                (>= row 0) (>= col 0))
-           (progn
-             (if (and
-                  (or
-                   (char= (nth col (nth row 2dls)) #\#)
-                   (char= (nth col (nth row 2dls)) #\L))
-                  (> distance 0))
-                 (progn ; is character to see
-                   (if (char= (nth col (nth row 2dls)) cquery)
-                       (list row col) ; got match
-                       Nil)) ; hit something else
-                 (progn ; empty space - or on the starting square
-                   (ping-direction 2dls cquery (+ row irow) (+ col icol) irow icol (+ distance 1)))))
-           (progn ; gone off the grid
-             Nil))))
-  (defun get-n-surround-direction(2dls query row col)
+  (defun ping-direction (2dls cquery row col irow icol distance selection)
     (let ((n-cols (length (nth 0 2dls)))
           (n-rows (length 2dls)))
       (if (and (< row n-rows) (< col n-cols)
                (>= row 0) (>= col 0))
-          (let ((_t (ping-direction 2dls query row col -1  0 0))
-                (b  (ping-direction 2dls query row col  1  0 0))
-                (l  (ping-direction 2dls query row col  0 -1 0))
-                (r  (ping-direction 2dls query row col  0  1 0))
-                (tl (ping-direction 2dls query row col -1 -1 0))
-                (tr (ping-direction 2dls query row col -1  1 0))
-                (bl (ping-direction 2dls query row col  1 -1 0))
-                (br (ping-direction 2dls query row col  1  1 0)))
+          (if (and
+               (member (nth col (nth row 2dls)) selection)
+               (> distance 0))
+              (if (char= (nth col (nth row 2dls)) cquery) ; is character to see
+                  (list row col) ; got match
+                  Nil) ; hit something else
+              ;; empty space - or on the starting square
+              (ping-direction 2dls cquery (+ row irow) (+ col icol) irow icol (+ distance 1) selection))
+          Nil))) ; gone off the grid
+  (defun ping-direction-long (2dls cquery row col irow icol distance)
+    (ping-direction 2dls cquery row col irow icol distance (list #\# #\L)))
+
+  (defun ping-direction-short (2dls cquery row col irow icol distance)
+    (ping-direction 2dls cquery row col irow icol distance (list #\# #\L #\.)))
+
+  (defun get-n-surround(2dls ping query row col)
+    (let ((n-cols (length (nth 0 2dls)))
+          (n-rows (length 2dls)))
+      (if (and (< row n-rows) (< col n-cols)
+               (>= row 0) (>= col 0))
+          (let ((_t (funcall ping 2dls query row col -1  0 0))
+                (b  (funcall ping 2dls query row col  1  0 0))
+                (l  (funcall ping 2dls query row col  0 -1 0))
+                (r  (funcall ping 2dls query row col  0  1 0))
+                (tl (funcall ping 2dls query row col -1 -1 0))
+                (tr (funcall ping 2dls query row col -1  1 0))
+                (bl (funcall ping 2dls query row col  1 -1 0))
+                (br (funcall ping 2dls query row col  1  1 0)))
             (remove nil (list _t b l r tl tr bl br))))))
 
-  (loop while T do
+  (defun get-n-surround-all(parsed f)
     (let* ((n-cols (- (length (nth 0 parsed)) 1))
-           (n-rows (- (length parsed) 1))
-           (to-remove (remove nil
-                              (loop for i from 0 to n-rows
-                                    collect
-                                    (remove nil (loop for j from 0 to n-cols
-                                                      if (or (char= (nth j (nth i parsed)) #\L)
-                                                             (char= (nth j (nth i parsed)) #\#))
-                                                        collect
-                                                        (remove nil (if (>= (length (get-n-surround-direction parsed #\# i j)) 5) (list i j)))))))))
+           (n-rows (- (length parsed) 1)))
+      (loop for i from 0 to n-rows collect
+             (remove nil (loop for j from 0 to n-cols
+                if (or (char= (nth j (nth i parsed)) #\L)
+                       (char= (nth j (nth i parsed)) #\#))
+                  collect (remove nil (funcall f i j)))))))
 
-      ;; (print parsed)
-      ;; (print (count-seats parsed))
-      ;; (print "========")
-      (loop for col in to-remove do
-        (loop for row in to-remove do
-          (loop for (r c) in row do
-            (setf (nth c (nth r parsed)) #\L ))))
-    ;;;; (print (get-n-surround parsed 0 0 1))
-      ;; (print parsed)
-      ;; (print (count-seats parsed))
-      ;; (print "========")
-      (let ((to-add (remove nil
-                            (loop for i from 0 to n-rows
-                                  collect
-                                  (remove nil (loop for j from 0 to n-cols
-                                                    if (or (char= (nth j (nth i parsed)) #\L)
-                                                           (char= (nth j (nth i parsed)) #\#))
-                                                      collect
-                                                        (remove nil (if (> (length (get-n-surround-direction parsed #\# i j)) 0) Nil (list i j)))))))))
+  (defun replace-given-points(2dls ls query)
+    (loop for col in ls do
+      (loop for row in ls do
+        (loop for (r c) in row do
+          (setf (nth c (nth r 2dls)) query)))))
 
-        ;; (print to-add)
-        ;; (print (get-n-surround parsed #\L 1 8))
-        (loop for col in to-add do
-          (loop for row in to-add do
-            (loop for (r c) in row do
-              (setf (nth c (nth r parsed)) #\# ))))
-        ;; (print parsed)
-        (print (count-seats parsed))))
-    ;; (setf (nth c (nth r 2dls)) #\L ))))
-       )
-  ;; (length (get-n-surround parsed #\# 0 0))
-  )
+(defun partOneTwo(parsed)
 
+  (let ((parts (list (list #'ping-direction-short 4) (list #'ping-direction-long 5))))
+    (loop for (ping count) in parts
+          collect
+          (let ((results Nil)
+                ;; deep copy the 2d list
+                (2dls (loop for row in parsed collect (loop for col in row collect col))))
+            (loop while T do
+              (let* ((n-cols (- (length (nth 0 2dls)) 1))
+                     (n-rows (- (length 2dls) 1))
+                     (to-remove (get-n-surround-all
+                                 2dls
+                                 #'(lambda (row col)
+                                     (if (>= (length (get-n-surround 2dls ping #\# row col)) count)
+                                         (list row col)))))
+                     (to-add (get-n-surround-all
+                              2dls
+                              #'(lambda (row col)
+                                  (if (> (length (get-n-surround 2dls ping #\# row col)) 0)
+                                      Nil
+                                      (list row col))))))
+
+                (replace-given-points 2dls to-remove #\L)
+                (replace-given-points 2dls to-add #\#)
+                (let ((seat-count (count-seats 2dls)))
+                  (setq results (append results (list seat-count)))
+                  (print seat-count)
+                  (if (> (length (loop for r in results when (= r seat-count) collect r)) 5)
+                      (return seat-count)))))))))
 
 (let ((parsed (parse-file 'my-parser "input11.txt")))
-  (print (partTwo parsed)))
+  (print (partOneTwo parsed)))
